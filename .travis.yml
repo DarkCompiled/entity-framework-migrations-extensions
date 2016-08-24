@@ -1,2 +1,2 @@
 language: csharp
-solution: SoftGage.EntityFramework.Migrations.sln
+solution: ./src/SoftGage.EntityFramework.Migrations.sln
