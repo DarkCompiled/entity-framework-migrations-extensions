@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>SoftGage.EntityFramework.Migrations</id>
+    <version>$version$</version>
+    <title>SoftGage Entity Framework Migrations Extensions</title>
+    <authors>Fernando Rocha</authors>
+    <owners>Fernando Rocha</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/DarkCompiled/entity-framework-migrations-extensions</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Extensions for Entity Framework 6 migrations.</description>
+    <copyright>Copyright © Fernando Rocha 2016</copyright>
+    <tags>Entity Framework EF6 Code-First Migrations Extensions Always Encrypted</tags>
+  </metadata>
+</package>
