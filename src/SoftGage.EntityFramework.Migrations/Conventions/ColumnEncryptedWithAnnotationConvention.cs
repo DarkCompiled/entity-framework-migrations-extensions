@@ -7,14 +7,14 @@ using System.Reflection;
 
 namespace SoftGage.EntityFramework.Migrations.Conventions
 {
-    internal sealed class ColumnEncryptedAnnotationConvention : AttributeToColumnAnnotationConvention<EncryptedWithAttribute, string>
+    internal sealed class ColumnEncryptedWithAnnotationConvention : AttributeToColumnAnnotationConvention<EncryptedWithAttribute, string>
     {
         #region Constants
-        public const string AnnotationName = "Encrypted";
+        public const string AnnotationName = "EncryptedWith";
         #endregion
 
         #region Constructor
-        public ColumnEncryptedAnnotationConvention()
+        public ColumnEncryptedWithAnnotationConvention()
             : base(AnnotationName, AnnotationFactory) { }
         #endregion
 

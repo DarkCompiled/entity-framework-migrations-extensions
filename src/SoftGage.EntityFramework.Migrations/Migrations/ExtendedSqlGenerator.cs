@@ -54,9 +54,9 @@ namespace SoftGage.EntityFramework.Migrations
         }
         protected override void Generate(AddColumnOperation addColumnOperation)
         {
-            PrepareColumnDefaultValue(addColumnOperation);
+            PrepareColumnDefaultConstraint(addColumnOperation);
 
-            base.Generate(addColumnOperation); // TODO FIXME
+            base.Generate(addColumnOperation);
             var annotations = addColumnOperation.Column.Annotations;
 
             // Retrieve names.
@@ -83,7 +83,7 @@ namespace SoftGage.EntityFramework.Migrations
 
                     // Obtain annotation info for description.
                     AnnotationValues columnAnnotationValues;
-                    columnAnnotations.TryGetValue("NonClustered", out columnAnnotationValues);
+                    columnAnnotations.TryGetValue(ColumnNonClusteredAnnotationConvention.AnnotationName, out columnAnnotationValues);
 
                     // Do SQL generation for column using annotation value as appropriate.
                     if (columnAnnotationValues != null)
@@ -143,7 +143,7 @@ namespace SoftGage.EntityFramework.Migrations
             }
 
             // Generate column default value.
-            baseCommand = GenerateColumnDefaultValue(column, baseCommand);
+            baseCommand = GenerateColumnDefaultConstraint(column, baseCommand);
 
             // Generate column encrypted.
             baseCommand = GenerateColumnEncrypted(column, baseCommand);
@@ -158,7 +158,7 @@ namespace SoftGage.EntityFramework.Migrations
         {
             // Obtain annotation info
             AnnotationValues values;
-            column.Annotations.TryGetValue(ColumnEncryptedAnnotationConvention.AnnotationName, out values);
+            column.Annotations.TryGetValue(ColumnEncryptedWithAnnotationConvention.AnnotationName, out values);
             if (values == null)
             {
                 return command;
@@ -191,41 +191,53 @@ namespace SoftGage.EntityFramework.Migrations
             var encryptionType = config.Type.ToString().ToUpperInvariant();
             return command + $"{collate} ENCRYPTED WITH (ENCRYPTION_TYPE = {encryptionType}, ALGORITHM = 'AEAD_AES_256_CBC_HMAC_SHA_256', COLUMN_ENCRYPTION_KEY = {config.KeyName}) ";
         }
-        private static void PrepareColumnDefaultValue(AddColumnOperation addColumnOperation)
+        private static void PrepareColumnDefaultConstraint(AddColumnOperation addColumnOperation)
         {
             var column = addColumnOperation.Column;
 
-            // Obtain annotation info
+            // Obtain default contraint annotation info.
             AnnotationValues values;
             column.Annotations.TryGetValue(DefaultConstraintAnnotationConvention.AnnotationName, out values);
-
-            // Do SQL generation for column using annotation value as appropriate.
             var value = values?.NewValue as string;
 
-            // Exit if no value is defined.
+            // Constraint is not defined.
             if (value == null)
             {
-                return;
+                // Try reading default value annotation if constraint is not available.
+                column.Annotations.TryGetValue(DefaultValueAnnotationConvention.AnnotationName, out values);
+                value = values?.NewValue as string;
+
+                // Exit if also no value is defined.
+                if (value == null)
+                {
+                    return;
+                }
             }
 
             // Set column default value.
             addColumnOperation.Column.DefaultValueSql = value;
         }
-        private static string GenerateColumnDefaultValue(ColumnModel column, string command)
+        private static string GenerateColumnDefaultConstraint(ColumnModel column, string command)
         {
             // Obtain annotation info
+            var deserialize = true;
             AnnotationValues values;
             column.Annotations.TryGetValue(DefaultConstraintAnnotationConvention.AnnotationName, out values);
             if (values == null)
             {
-                return command;
+                column.Annotations.TryGetValue(DefaultValueAnnotationConvention.AnnotationName, out values);
+                if (values == null)
+                {
+                    return command;
+                }
+                deserialize = false;
             }
 
             // Do SQL generation for column using annotation value as appropriate.
-            var value = values.NewValue as string;
+            var serialized = values.NewValue as string;
 
             // Exit if no value is defined.
-            if (value == null)
+            if (serialized == null)
             {
                 return command;
             }
@@ -238,16 +250,31 @@ namespace SoftGage.EntityFramework.Migrations
             }
 
             // Bind the constraint.
-            var config = DefaultConstraintConfiguration.Deserialize(value);
-            return command + " DEFAULT " + config.Value;
+            string name;
+            string value;
+            if (deserialize)
+            {
+                var config = DefaultConstraintConfiguration.Deserialize(serialized);
+                name = config.Name;
+                value = config.Value;
+            }
+            else
+            {
+                name = null;
+                value = serialized;
+            }
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                command += " CONSTRAINT [" + name + "]";
+            }
+            return command + " DEFAULT " + value;
         }
         private void GenerateTableDescription(IDictionary<string, AnnotationValues> annotations, string tableName)
         {
             // Obtain annotation info for description.
             AnnotationValues descriptionAnnotation;
-            annotations.TryGetValue("Description", out descriptionAnnotation);
+            annotations.TryGetValue(TableDescriptionAnnotationConvention.AnnotationName, out descriptionAnnotation);
             if (descriptionAnnotation == null) return;
-
 
             GenerateTableDescription(descriptionAnnotation.OldValue as string, descriptionAnnotation.NewValue as string, tableName);
         }
@@ -255,7 +282,7 @@ namespace SoftGage.EntityFramework.Migrations
         {
             // Obtain annotation info for description.
             object newDescription;
-            annotations.TryGetValue("Description", out newDescription);
+            annotations.TryGetValue(TableDescriptionAnnotationConvention.AnnotationName, out newDescription);
             GenerateTableDescription(null, newDescription as string, tableName);
         }
         private void GenerateTableDescription(string oldDescription, string newDescription, string tableName)
@@ -282,16 +309,24 @@ namespace SoftGage.EntityFramework.Migrations
         }
         private void GenerateColumnDefaultConstraint(IDictionary<string, AnnotationValues> annotations, string tableName, string columnName)
         {
-            // Obtain annotation info for default value.
+            // Obtain annotation info for default constraint.
             AnnotationValues defaultAnnotation;
-            annotations.TryGetValue("DefaultValue", out defaultAnnotation);
-            GenerateColumnDefaultConstraint(defaultAnnotation, tableName, columnName);
+            annotations.TryGetValue(DefaultConstraintAnnotationConvention.AnnotationName, out defaultAnnotation);
+            if (GenerateColumnDefaultConstraint(defaultAnnotation, tableName, columnName))
+            {
+                return;
+            }
+
+            // Obtain annotation info for default value.
+            annotations.TryGetValue(DefaultValueAnnotationConvention.AnnotationName, out defaultAnnotation);
+            GenerateColumnDefaultValue(defaultAnnotation, tableName, columnName);
         }
-        private void GenerateColumnDefaultConstraint(AnnotationValues annotationValues, string tableName, string columnName)
+        private bool GenerateColumnDefaultConstraint(AnnotationValues annotationValues, string tableName, string columnName)
         {
-            if (annotationValues == null) return;
+            if (annotationValues == null) return false;
             var oldValue = annotationValues.OldValue as string;
             var newValue = annotationValues.NewValue as string;
+            var modified = false;
 
             // Drop default value.
             if (oldValue != null)
@@ -299,9 +334,10 @@ namespace SoftGage.EntityFramework.Migrations
                 var config = DefaultConstraintConfiguration.Deserialize(oldValue);
                 using (var writer = Writer())
                 {
-                    DropColumnDefaultConstraint(writer, tableName, columnName, config);
+                    DropColumnDefaultConstraint(writer, tableName, columnName, config.Name);
                     Statement(writer);
                 }
+                modified = true;
             }
 
             // Create default value.
@@ -310,7 +346,36 @@ namespace SoftGage.EntityFramework.Migrations
                 var config = DefaultConstraintConfiguration.Deserialize(newValue);
                 using (var writer = Writer())
                 {
-                    CreateColumnDefaultConstraint(writer, tableName, columnName, config);
+                    CreateColumnDefaultConstraint(writer, tableName, columnName, config.Name, config.Value);
+                    Statement(writer);
+                }
+                modified = true;
+            }
+
+            return modified;
+        }
+        private void GenerateColumnDefaultValue(AnnotationValues annotationValues, string tableName, string columnName)
+        {
+            if (annotationValues == null) return;
+            var oldValue = annotationValues.OldValue as string;
+            var newValue = annotationValues.NewValue as string;
+
+            // Drop default value.
+            if (oldValue != null)
+            {
+                using (var writer = Writer())
+                {
+                    DropColumnDefaultConstraint(writer, tableName, columnName, null);
+                    Statement(writer);
+                }
+            }
+
+            // Create default value.
+            if (newValue != null)
+            {
+                using (var writer = Writer())
+                {
+                    CreateColumnDefaultConstraint(writer, tableName, columnName, null, newValue);
                     Statement(writer);
                 }
             }
@@ -319,7 +384,7 @@ namespace SoftGage.EntityFramework.Migrations
         {
             // Obtain annotation info for description.
             AnnotationValues descriptionAnnotation;
-            annotations.TryGetValue("Description", out descriptionAnnotation);
+            annotations.TryGetValue(ColumnDescriptionAnnotationConvention.AnnotationName, out descriptionAnnotation);
             GenerateColumnDescription(descriptionAnnotation, tableName, columnName);
         }
         private void GenerateColumnDescription(AnnotationValues annotationValues, string tableName, string columnName)
@@ -381,46 +446,40 @@ namespace SoftGage.EntityFramework.Migrations
             var tableNoSchema = parts.Length == 2 ? parts[1] : parts[0];
             writer.Write("EXECUTE sp_dropextendedproperty N'MS_Description', N'SCHEMA', N'{0}', N'TABLE', N'{1}', N'COLUMN', N'{2}'", tableSchema, tableNoSchema, columnName);
         }
-        private void CreateColumnDefaultConstraint(TextWriter writer, string tableName, string columnName, DefaultConstraintConfiguration config)
+        private void CreateColumnDefaultConstraint(TextWriter writer, string tableName, string columnName, string constraintName, string value)
         {
-            var constraintName = config.Name;
             if (string.IsNullOrEmpty(constraintName))
             {
-                // Add unnamed constraint.
-                writer.WriteLine(SqlAddUnnamedConstraint, Name(tableName), columnName, config.Value);
+                writer.WriteLine(SqlAddUnnamedConstraint, Name(tableName), columnName, value);
             }
             else
             {
-                // Add named constraint.
-                writer.WriteLine(SqlAddNamedConstraint, Name(tableName), columnName, constraintName, config.Value);
+                writer.WriteLine(SqlAddNamedConstraint, Name(tableName), columnName, constraintName, value);
             }
         }
-        private void DropColumnDefaultConstraint(TextWriter writer, string tableName, string columnName, DefaultConstraintConfiguration config)
+        private void DropColumnDefaultConstraint(TextWriter writer, string tableName, string columnName, string constraintName)
         {
-            var constraintName = config.Name;
             if (string.IsNullOrEmpty(constraintName))
             {
-                // Drop unnamed constraint.
                 var tableNoSchema = tableName.Split(Separators, StringSplitOptions.RemoveEmptyEntries).Last();
                 writer.WriteLine(SqlDropUnnamedConstraint, Name(tableName), tableNoSchema, columnName);
             }
             else
             {
-                // Drop named constraint.
                 writer.WriteLine(SqlDropNamedConstraint, Name(tableName), constraintName);
             }
         }
         #endregion
-        
+
         #region Unsupported migrations
         private static void UnsupportedColumnEncryped(IDictionary<string, AnnotationValues> annotations, string tableName, string columnName)
         {
             // Obtain annotation.
             AnnotationValues encryptedAnnotation;
-            annotations.TryGetValue(ColumnEncryptedAnnotationConvention.AnnotationName, out encryptedAnnotation);
+            annotations.TryGetValue(ColumnEncryptedWithAnnotationConvention.AnnotationName, out encryptedAnnotation);
             if (encryptedAnnotation == null) return;
 
-            // Drop default value.
+            // Unsupported operation.
             throw new MigrationsException($"Unable to modify column '{columnName}' of table '{tableName}'. Column Always Encrypted must be added when the column is created, this column is already created.");
         }
         #endregion

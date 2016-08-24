@@ -5,9 +5,13 @@ namespace SoftGage.EntityFramework.Migrations.Conventions
 {
     internal sealed class ColumnNonClusteredAnnotationConvention : AttributeToColumnAnnotationConvention<NonClusteredAttribute, string>
     {
+        #region Constants
+        public const string AnnotationName = "NonClustered";
+        #endregion
+
         #region Constructor
         public ColumnNonClusteredAnnotationConvention()
-            : base("NonClustered", (info, list) => string.Empty) { }
+            : base(AnnotationName, (info, list) => string.Empty) { }
         #endregion
     }
 }

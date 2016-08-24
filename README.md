@@ -48,7 +48,7 @@ The following conventions become available:
 - [`TableDescriptionAnnotationConvention`](#ColumnDescriptionAnnotationConvention) Allows configuring SQL descriptions on tables.
 - [`ColumnDescriptionAnnotationConvention`](#ColumnDescriptionAnnotationConvention) Allows configuring SQL descriptions on columns.
 - [`ColumnNonClusteredAnnotationConvention`](#ColumnNonClusteredAnnotationConvention) Allows configuring SQL Key column as Non-Clustered.
-- [`ColumnEncryptedAnnotationConvention`](#ColumnEncryptedAnnotationConvention) Allows configuring SQL Always Encrypted columns.
+- [`ColumnEncryptedWithAnnotationConvention`](#ColumnEncryptedWithAnnotationConvention) Allows configuring SQL Always Encrypted columns.
 - [`DefaultConstraintAnnotationConvention`](#DefaultConstraintAnnotationConvention) Allows configuring SQL column default value.
 
 Context is created, by default, without the following conventions:
@@ -95,7 +95,7 @@ public class User
 }
 ```
 
-## ColumnEncryptedAnnotationConvention
+## ColumnEncryptedWithAnnotationConvention
 Sets a SQL column as [Always Encrypted]. This new feature instructs the driver to automatically encrypt and decrypt sensitive data based on an encryption key, never revealed to the database engine.  
 Please notice that this feature requires Microsoft SQL Server 2016 or later.  
 To use it, just decorate an entity property with the annotation `EncryptedWith`, and specify the key name to use.
@@ -110,10 +110,15 @@ public class User
 
 ## DefaultConstraintAnnotationConvention
 Sets a SQL default values on a column. This is extremely useful when you don't want to care about some column values.  
-To use it, just decorate an entity property with the annotation `DefaultConstraint` and `DatabaseGenerated` with `Computed` value:
+To use it, just decorate an entity property with the annotation `DefaultConstraint` and `DatabaseGenerated` with `Computed` value.  
+Or you may use standard `DefaultValue` annotation if you don't want to set the constraint name.
 ```C#
 public class User
 {
+	[DefaultValue(0)]
+	[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
+    public bool Deleted { get; set; }
+
     [DefaultConstraint("GETUTCDATE()")]
 	[DatabaseGenerated(DatabaseGeneratedOption.Computed)]
     public DateTime CreatedOn { get; set; }

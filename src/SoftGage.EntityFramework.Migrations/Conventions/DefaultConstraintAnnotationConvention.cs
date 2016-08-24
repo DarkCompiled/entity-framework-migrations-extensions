@@ -10,7 +10,7 @@ namespace SoftGage.EntityFramework.Migrations.Conventions
     internal sealed class DefaultConstraintAnnotationConvention : AttributeToColumnAnnotationConvention<DefaultConstraintAttribute, string>
     {
         #region Constants
-        public const string AnnotationName = "DefaultValue";
+        public const string AnnotationName = "DefaultConstraint";
         #endregion
 
         #region Constructor

@@ -19,8 +19,9 @@ namespace SoftGage.EntityFramework.Migrations.Extensions
     ///   <item><description><see cref="TableDescriptionAnnotationConvention"/>,</description></item>
     ///   <item><description><see cref="ColumnDescriptionAnnotationConvention"/>,</description></item>
     ///   <item><description><see cref="ColumnNonClusteredAnnotationConvention"/>,</description></item>
-    /// <item><description><see cref="ColumnEncryptedAnnotationConvention"/>,</description></item>
+    /// <item><description><see cref="ColumnEncryptedWithAnnotationConvention"/>,</description></item>
     ///   <item><description><see cref="DefaultConstraintAnnotationConvention"/>.</description></item>
+    ///   <item><description><see cref="DefaultValueAnnotationConvention"/>.</description></item>
     /// </list>
     /// </summary>
     public class ExtendedDbContext : DbContext
@@ -60,8 +61,9 @@ namespace SoftGage.EntityFramework.Migrations.Extensions
             modelBuilder.Conventions.Add<TableDescriptionAnnotationConvention>();
             modelBuilder.Conventions.Add<ColumnDescriptionAnnotationConvention>();
             modelBuilder.Conventions.Add<ColumnNonClusteredAnnotationConvention>();
-            modelBuilder.Conventions.Add<ColumnEncryptedAnnotationConvention>();
+            modelBuilder.Conventions.Add<ColumnEncryptedWithAnnotationConvention>();
             modelBuilder.Conventions.Add<DefaultConstraintAnnotationConvention>();
+            modelBuilder.Conventions.Add<DefaultValueAnnotationConvention>();
         }
         #endregion
     }

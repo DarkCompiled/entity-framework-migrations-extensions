@@ -58,7 +58,8 @@
     <Compile Include="Annotations\EncryptionType.cs" />
     <Compile Include="Configurations\EncryptedWithConfiguration.cs" />
     <Compile Include="Configurations\SimpleSerializer.cs" />
-    <Compile Include="Conventions\ColumnEncryptedAnnotationConvention.cs" />
+    <Compile Include="Conventions\DefaultValueAnnotationConvention.cs" />
+    <Compile Include="Conventions\ColumnEncryptedWithAnnotationConvention.cs" />
     <Compile Include="Conventions\ColumnDescriptionAnnotationConvention.cs" />
     <Compile Include="Conventions\ColumnNonClusteredAnnotationConvention.cs" />
     <Compile Include="Conventions\DefaultConstraintAnnotationConvention.cs" />

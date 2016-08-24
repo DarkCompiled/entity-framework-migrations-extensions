@@ -6,9 +6,13 @@ namespace SoftGage.EntityFramework.Migrations.Conventions
 {
     internal sealed class TableDescriptionAnnotationConvention : AttributeToTableAnnotationConvention<DescriptionAttribute, string>
     {
+        #region Constants
+        public const string AnnotationName = "Description";
+        #endregion
+
         #region Constructor
         public TableDescriptionAnnotationConvention()
-            : base("Description", (info, list) => list.First().Description) { }
+            : base(AnnotationName, (info, list) => list.First().Description) { }
         #endregion
     }
 }
