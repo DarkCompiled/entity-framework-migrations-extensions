@@ -1,7 +1,7 @@
 # SoftGage Entity Framework Migrations Extensions
+![current build status](https://travis-ci.org/DarkCompiled/entity-framework-migrations-extensions.svg?branch=develop)
 Extensions for Entity Framework 6 migrations.  
 This brings SQL Always Encrypted columns, SQL descriptions and SQL default values to Entity Framework 6.  
-I hope you enjoy!  
 
 ## How to Use?
 It's very easy to use, you just need to use some classes as part of the configuration and you're done.
@@ -30,7 +30,7 @@ public class DbConfiguration : ExtendedConfiguration<SampleContext>
     protected override void Seed(T context)
     {
 	    // Pre-populate the database.
-        context.Set<object>().AddOrUpdate(
+        context.Set<User>().AddOrUpdate(
                 //user => user.Email, new User(...)
             );
     }
