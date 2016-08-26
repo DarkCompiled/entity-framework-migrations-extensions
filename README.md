@@ -1,5 +1,5 @@
 # SoftGage Entity Framework Migrations Extensions
-![current build status](https://travis-ci.org/DarkCompiled/entity-framework-migrations-extensions.svg?branch=develop)  
+[![NuGet version](https://badge.fury.io/nu/SoftGage.EntityFramework.Migrations.svg)](https://badge.fury.io/nu/SoftGage.EntityFramework.Migrations) [![Build Status](https://travis-ci.org/DarkCompiled/entity-framework-migrations-extensions.svg?branch=develop)](https://travis-ci.org/DarkCompiled/entity-framework-migrations-extensions)  
 Extensions for Entity Framework 6 migrations.  
 This brings SQL Always Encrypted columns, SQL descriptions and SQL default values to Entity Framework 6.  
 
