@@ -27,7 +27,7 @@ public class DbConfiguration : ExtendedConfiguration<SampleContext>
         ContextKey = "MyCompany.Data";
     }
 
-    protected override void Seed(T context)
+    protected override void Seed(SampleContext context)
     {
 	    // Pre-populate the database.
         context.Set<User>().AddOrUpdate(
@@ -40,16 +40,16 @@ public class DbConfiguration : ExtendedConfiguration<SampleContext>
 ### Database Initialization
 Then, use the configuration to initialize the database, just like you would normally do:
 ```C#
-    Database.SetInitializer(new MigrateDatabaseToLatestVersion<SampleContext, DbConfiguration());
+    Database.SetInitializer(new MigrateDatabaseToLatestVersion<SampleContext, DbConfiguration>());
 ```
 
 ## What's new?
 The following conventions become available:
-- [`TableDescriptionAnnotationConvention`](#ColumnDescriptionAnnotationConvention) Allows configuring SQL descriptions on tables.
-- [`ColumnDescriptionAnnotationConvention`](#ColumnDescriptionAnnotationConvention) Allows configuring SQL descriptions on columns.
-- [`ColumnNonClusteredAnnotationConvention`](#ColumnNonClusteredAnnotationConvention) Allows configuring SQL Key column as Non-Clustered.
-- [`ColumnEncryptedWithAnnotationConvention`](#ColumnEncryptedWithAnnotationConvention) Allows configuring SQL Always Encrypted columns.
-- [`DefaultConstraintAnnotationConvention`](#DefaultConstraintAnnotationConvention) Allows configuring SQL column default value.
+- [`TableDescriptionAnnotationConvention`](#user-content-columndescriptionannotationconvention) Allows configuring SQL descriptions on tables.
+- [`ColumnDescriptionAnnotationConvention`](#user-content-columndescriptionannotationconvention) Allows configuring SQL descriptions on columns.
+- [`ColumnNonClusteredAnnotationConvention`](#user-content-columnnonclusteredannotationconvention) Allows configuring SQL Key column as Non-Clustered.
+- [`ColumnEncryptedWithAnnotationConvention`](#user-content-columnencryptedwithannotationconvention) Allows configuring SQL Always Encrypted columns.
+- [`DefaultConstraintAnnotationConvention`](#user-content-defaultconstraintannotationconvention) Allows configuring SQL column default value.
 
 Context is created, by default, without the following conventions:
 - `PluralizingTableNameConvention` I personally prefer singular names, but you may restore it if you like.
@@ -61,7 +61,7 @@ Context is created, by default, with the following settings disabled:
 Sets a SQL description on a table. This is especially useful to help database administrators to figure out what's the purpose of that table.  
 To use it, just decorate an entity class with the annotation `Description`:
 ```C#
-[Description("This table has users.")]
+[Description("Application users.")]
 public class User
 {
     //(...)
@@ -75,7 +75,7 @@ To use it, just decorate an entity property with the annotation `Description`:
 public class User
 {
     [Description("UTC date when this user expires and, therefore, is prevented from logging in.")]
-	public string ExpiresOn {get; set;}
+	public string ExpiresOn { get; set; }
 }
 ```
 
@@ -104,7 +104,7 @@ You may optionally specify the desired [type of encryption] (Deterministic or Ra
 public class User
 {
     [EncryptedWith("MyKey", Type=EncryptionType.Randomized)]
-	public string CreditCardNumber {get; set;}
+	public string CreditCardNumber { get; set; }
 }
 ```
 
